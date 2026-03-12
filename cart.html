@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cart - AP GroceryHub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container header-content">
+      <div class="logo">AP Grocery<span>Hub</span></div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="cart.html">Cart</a>
+      </nav>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search products..." />
+        <button onclick="searchProducts()">Search</button>
+      </div>
+      <a href="cart.html" class="cart-link">
+        Cart <span class="cart-count" id="cartCount">0</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="container cart-page">
+    <div id="cartContent">
+      <div class="cart-header">
+        <div>Item</div>
+        <div>Qty & Price</div>
+        <div>Action</div>
+      </div>
+      <!-- JS will fill items -->
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-col">
+        <h4>AP GroceryHub</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Follow Us</h4>
+        <ul>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Facebook</a></li>
+          <li><a href="#">Twitter</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 AP GroceryHub. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    // EXTEND script.js for cart page
+    function renderCartItems() {
+      const cartEl = document.getElementById("cartContent");
+      if (!cartEl) return;
+
+      if (cart.length === 0) {
+        cartEl.innerHTML = `
+          <div class="cart-empty">
+            <p>Your cart is empty.</p>
+            <a href="index.html" style="color:#28a745; font-weight:600;">Continue Shopping</a>
+          </div>
+        `;
+        return;
+      }
+
+      let subtotal = 0;
+
+      const itemsHtml = cart.map(item => {
+        const total = item.price * item.qty;
+        subtotal += total;
+        return `
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <div class="cart-item-image">${item.img}</div>
+              <div>
+                <div class="cart-item-title">${item.name}</div>
+                <div>₹${item.price} each</div>
+              </div>
+            </div>
+
+            <div class="cart-item-details">
+              <div class="cart-item-qty">
+                <input type="number" id="cart-qty-${item.id}" value="${item.qty}" min="1" max="20"
+                  onchange="updateCartQty(${item.id}, this.value)" />
+              </div>
+              <div class="cart-item-price">
+                Total: ₹${total}
+              </div>
+            </div>
+
+            <div class="cart-item-action">
+              <button onclick="removeFromCart(${item.id})">Remove</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      cartEl.innerHTML = `
+        <div class="cart-header">
+          <div>Item</div>
+          <div>Qty & Price</div>
+          <div>Action</div>
+        </div>
+        ${itemsHtml}
+
+        <div class="cart-summary">
+          <div class="cart-summary-row">
+            <div>Subtotal</div>
+            <div>₹${subtotal}</div>
+          </div>
+          <div class="cart-summary-row">
+            <div>Delivery</div>
+            <div>₹40</div>
+          </div>
+          <div class="cart-summary-row">
+            <div>Discount</div>
+            <div>₹0</div>
+          </div>
+          <div class="cart-total">
+            Total: ₹${subtotal + 40}
+          </div>
+
+          <button class="cart-checkout-btn" onclick="proceedToCheckout()">
+            Proceed to Checkout
+          </button>
+        </div>
+      `;
+    }
+
+    function updateCartQty(id, rawQty) {
+      const qty = parseInt(rawQty) || 1;
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.qty = qty;
+        saveCart();
+        renderCartItems();
+      }
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(i => i.id !== id);
+      saveCart();
+      renderCartItems();
+    }
+
+    function proceedToCheckout() {
+      if (cart.length === 0) {
+        alert("Your cart is empty.");
+        return;
+      }
+      window.location.href = "payment.html";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateCartCount();
+      renderCartItems();
+    });
+  </script>
+</body>
+</html>
