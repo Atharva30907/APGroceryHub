@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - AP GroceryHub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container header-content">
+      <div class="logo">AP Grocery<span>Hub</span></div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="cart.html">Cart</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="container form-page">
+    <div class="form-container">
+      <h2 class="form-title">Create Account</h2>
+      <form id="signupForm" onsubmit="handleSignup(event)">
+        <div class="form-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" required />
+        </div>
+        <div class="form-group">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" required />
+        </div>
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" minlength="6" required />
+        </div>
+        <div class="form-group">
+          <label for="signupConfirmPassword">Confirm Password</label>
+          <input type="password" id="signupConfirmPassword" required />
+        </div>
+        <button type="submit" class="form-submit">Sign Up</button>
+        <div class="form-footer">
+          Already have an account? <a href="login.html">Login</a>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-col">
+        <h4>AP GroceryHub</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 AP GroceryHub. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Utility: Load users from localStorage (like a JSON file)
+    function loadUsers() {
+      const saved = localStorage.getItem("users");
+      if (!saved) {
+        // First run: empty users array
+        localStorage.setItem("users", JSON.stringify([]));
+        return [];
+      }
+      return JSON.parse(saved);
+    }
+
+    // Utility: Save updated users back to localStorage
+    function saveUsers(users) {
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    function handleSignup(e) {
+      e.preventDefault();
+
+      const nameEl = document.getElementById("signupName");
+      const emailEl = document.getElementById("signupEmail");
+      const passEl = document.getElementById("signupPassword");
+      const confirmPassEl = document.getElementById("signupConfirmPassword");
+
+      const name = nameEl.value.trim();
+      const email = emailEl.value.trim();
+      const password = passEl.value.trim();
+      const confirmPassword = confirmPassEl.value.trim();
+
+      if (!name || !email || !password) {
+        alert("Please fill all required fields.");
+        return;
+      }
+
+      if (password.length < 6) {
+        alert("Password must be at least 6 characters long.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return;
+      }
+
+      const users = loadUsers();
+
+      // Check if email is already registered
+      const existing = users.find(u => u.email === email);
+      if (existing) {
+        alert("This email is already registered. Please log in.");
+        return;
+      }
+
+      // Add new user (like writing to JSON/users.json)
+      const newUser = {
+        id: Date.now(), // simple unique ID
+        name,
+        email,
+        password // In real app, hash this
+      };
+
+      users.push(newUser);
+      saveUsers(users);
+
+      alert(`Account created for ${name}! Please log in.`);
+      window.location.href = "login.html"; // goes to login page
+    }
+  </script>
+</body>
+</html>
