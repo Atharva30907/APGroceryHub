@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout – AP GroceryHub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container header-content">
+      <div class="logo">AP Grocery<span>Hub</span></div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="cart.html">Cart</a>
+      </nav>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search products..." />
+        <button onclick="searchProducts()">Search</button>
+      </div>
+      <a href="cart.html" class="cart-link">
+        Cart <span class="cart-count" id="cartCount">0</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="container payment-page">
+    <h2 class="form-title">Checkout</h2>
+
+    <!-- ORDER SUMMARY -->
+    <div class="order-summary" id="orderSummary">
+      <!-- JS will fill this -->
+    </div>
+
+    <!-- ADDRESS FORM -->
+    <div class="payment-method">
+      <h3>Ship to Address</h3>
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" required />
+      </div>
+      <div class="form-group">
+        <label for="mobile">Mobile Number</label>
+        <input type="tel" id="mobile" required />
+      </div>
+      <div class="form-group">
+        <label for="address">Street Address</label>
+        <input type="text" id="address" required />
+      </div>
+      <div class="form-group">
+        <label for="city">City</label>
+        <input type="text" id="city" required />
+      </div>
+      <div class="form-group">
+        <label for="pincode">Pincode</label>
+        <input type="text" id="pincode" required />
+      </div>
+    </div>
+
+    <!-- PAYMENT METHOD SELECT -->
+    <div class="payment-method">
+      <h3>Payment Method</h3>
+      <div class="method-item" onclick="selectMethod('card')">
+        <span>Debit Card / Credit Card</span>
+      </div>
+      <div class="method-item" onclick="selectMethod('upi')">
+        <span>UPI ID/ QR Code</span>
+      </div>
+    </div>
+
+    <!-- CARD DETAILS -->
+    <div id="cardDetails" style="display:none; margin-top:1rem;">
+      <h3>Card Details</h3>
+      <div class="form-group">
+        <label for="cardNumber">Card Number</label>
+        <input type="text" id="cardNumber" placeholder="XXXX XXXX XXXX XXXX" required />
+      </div>
+      <div class="form-group">
+        <label for="cardName">Name on Card</label>
+        <input type="text" id="cardName" placeholder="As on card" required />
+      </div>
+      <div class="form-group">
+        <label for="cardExpiry">Expiry (MM/YY)</label>
+        <input type="text" id="cardExpiry" placeholder="MM/YY" required />
+      </div>
+      <div class="form-group">
+        <label for="cardCvv">CVV</label>
+        <input type="text" id="cardCvv" placeholder="XXX" required />
+      </div>
+    </div>
+
+    <!-- UPI DETAILS -->
+    <div id="upiDetails" style="display:none; margin-top:1rem;">
+      <h3>UPI Payment</h3>
+      <div class="form-group">
+        <label for="upiId">Enter UPI ID</label>
+        <input type="text" id="upiId" placeholder="e.g. yourname@upi" required />
+      </div>
+      <div class="form-group">
+        <label>Upload or show UPI QR Code</label>
+        <div style="
+          width: 140px;
+          height: 140px;
+          background: #f7f7f7;
+          border: 1px dashed #ddd;
+          border-radius: 8px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9rem;
+          color: #666;
+        ">
+          <img id="upiQrImage" src="qrcode.png" alt="UPI QR Code"
+               style="max-width:100%; max-height:100%; display:none;">
+        </div>
+      </div>
+      <div style="margin-top:0.5rem; text-align:center; font-size:0.9rem; color:#555;">
+        Scan this QR in your UPI app to pay.
+      </div>
+    </div>
+
+    <button class="payment-btn" onclick="placeOrder()">
+      Confirm & Place Order
+    </button>
+  </section>
+
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-col">
+        <h4>AP GroceryHub</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 AP GroceryHub. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Use your existing script.js -->
+  <script src="script.js"></script>
+  <script>
+    // ========== REUSED HELPERS (from script.js) ==========
+    function loadCart() {
+      return JSON.parse(localStorage.getItem("cart")) || [];
+    }
+
+    function updateCartCount() {
+      const countEl = document.getElementById("cartCount");
+      if (countEl) {
+        const cart = loadCart();
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        countEl.textContent = totalQty;
+      }
+    }
+
+    function renderCartSummary() {
+      const cart = loadCart();
+      const el = document.getElementById("orderSummary");
+      if (!el || cart.length === 0) {
+        el.innerHTML = `<p>Your cart is empty. Go back to <a href="cart.html">Cart</a>.</p>`;
+        return;
+      }
+
+      let subtotal = 0;
+
+      const itemsHtml = cart.map(item => {
+        const total = item.price * item.qty;
+        subtotal += total;
+        return `
+          <div class="cart-item" style="border-bottom:1px dashed #ddd; padding:0.8rem 0;">
+            <div style="display:flex; gap:1rem; align-items:center; flex:3;">
+              <div style="width:60px; height:60px; background:#f1f3f4; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                ${item.img}
+              </div>
+              <div>
+                <div style="font-size:0.9rem; font-weight:600;">${item.name}</div>
+                <div style="font-size:0.8rem; color:#666;">
+                  ₹${item.price} × ${item.qty}
+                </div>
+              </div>
+            </div>
+            <div style="flex:2; text-align:right; font-size:0.9rem; font-weight:600; color:#28a745;">
+              ₹${total}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const delivery = 40;
+      const discount = 0;
+      const total = subtotal + delivery;
+
+      el.innerHTML = `
+        <h3>Order Summary</h3>
+        ${itemsHtml}
+        <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px dashed #ddd; display:flex; flex-direction:column; gap:0.4rem; font-size:0.9rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span>Subtotal</span>
+            <span>₹${subtotal}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>Delivery</span>
+            <span>₹40</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>Discount</span>
+            <span>₹0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1rem; color:#28a745; margin-top:0.4rem;">
+            <span>Total</span>
+            <span>₹${total}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========== STORE ORDERS (like orders.json) ==========
+    function loadOrders() {
+      const saved = localStorage.getItem("orders");
+      if (!saved) return [];
+      return JSON.parse(saved);
+    }
+
+    function saveOrders(orders) {
+      localStorage.setItem("orders", JSON.stringify(orders));
+    }
+
+    // ========== PAYMENT METHOD SELECTION (FIXED) ==========
+    let selectedMethod = "card";
+
+    function selectMethod(method) {
+      // Get UI elements
+      const card = document.getElementById("cardDetails");
+      const upi = document.getElementById("upiDetails");
+      const cardItem = document.querySelector('div[onclick="selectMethod(\'card\')"]');
+      const upiItem = document.querySelector('div[onclick="selectMethod(\'upi\')"]');
+      const qrImg = document.getElementById("upiQrImage");
+
+      selectedMethod = method;
+
+      // Reset all
+      if (card) card.style.display = "none";
+      if (upi) upi.style.display = "none";
+      if (cardItem) cardItem.classList.remove("selected");
+      if (upiItem) upiItem.classList.remove("selected");
+      if (qrImg) qrImg.style.display = "none";
+
+      // Show only the selected one
+      if (method === "card") {
+        if (card) card.style.display = "block";
+        if (cardItem) cardItem.classList.add("selected");
+      } else if (method === "upi") {
+        if (upi) upi.style.display = "block";
+        if (upiItem) upiItem.classList.add("selected");
+        if (qrImg) qrImg.style.display = "block";
+      }
+    }
+
+    // ========== PLACE ORDER ==========
+    function placeOrder() {
+      const fullName = document.getElementById("fullName")?.value.trim();
+      const mobile = document.getElementById("mobile")?.value.trim();
+      const address = document.getElementById("address")?.value.trim();
+      const city = document.getElementById("city")?.value.trim();
+      const pincode = document.getElementById("pincode")?.value.trim();
+
+      if (!fullName || !mobile || !address || !city || !pincode) {
+        alert("Please fill all address fields.");
+        return;
+      }
+
+      const cart = loadCart();
+      if (cart.length === 0) {
+        alert("Your cart is empty. Cannot place order.");
+        return;
+      }
+
+      // Card validation (only if card is selected)
+      if (selectedMethod === "card") {
+        const cardNum   = document.getElementById("cardNumber")?.value.trim();
+        const cardName  = document.getElementById("cardName")?.value.trim();
+        const expiry    = document.getElementById("cardExpiry")?.value.trim();
+        const cvv       = document.getElementById("cardCvv")?.value.trim();
+
+        if (!cardNum || !cardName || !expiry || !cvv) {
+          alert("Please fill all card details.");
+          return;
+        }
+      }
+
+      // UPI validation (only if UPI is selected)
+      if (selectedMethod === "upi") {
+        const upiId = document.getElementById("upiId")?.value.trim();
+        if (!upiId) {
+          alert("Please enter your UPI ID.");
+          return;
+        }
+      }
+
+      // Simulate order creation
+      const userName  = localStorage.getItem("userName") || "Customer";
+      const userEmail = localStorage.getItem("userEmail") || "unknown@example.com";
+      const orderId   = "ORD" + Math.floor(100000 + Math.random() * 900000);
+      const totalAmount = cart.reduce((s, i) => s + i.price * i.qty, 0) + 40;
+
+      const newOrder = {
+        id: orderId,
+        date: new Date().toLocaleString(),
+        items: cart.map(i => ({ ...i })),
+        total: totalAmount,
+        name: fullName,
+        mobile: mobile,
+        address: `${address}, ${city}, ${pincode}`,
+        email: userEmail,
+        method: selectedMethod,
+        status: "Paid / Processing"
+      };
+
+      const orders = loadOrders();
+      orders.push(newOrder);
+      saveOrders(orders);
+
+      // Clear cart
+      localStorage.setItem("cart", "[]");
+      updateCartCount();
+
+      alert(`✅ Order placed successfully!\nOrder ID: ${orderId}\nTotal: ₹${totalAmount}\nPayment method: ${selectedMethod.toUpperCase()}`);
+      window.location.href = "index.html";
+    }
+
+    // ========== ON LOAD ==========
+    document.addEventListener("DOMContentLoaded", () => {
+      updateCartCount();
+      renderCartSummary();
+      selectMethod("card"); // default payment method
+    });
+
+    // OPTIONAL: if you want to keep search on payment page (from index.html)
+    function searchProducts() {
+      const term = document.getElementById("searchInput")?.value.toLowerCase().trim();
+      window.location.href = `index.html#search=${encodeURIComponent(term)}`;
+    }
+  </script>
+</body>
+</html>
